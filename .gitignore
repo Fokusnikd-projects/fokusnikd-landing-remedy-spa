@@ -7,3 +7,4 @@ dist
 tsconfig.tsbuildinfo
 .DS_Store
 /artifacts
+.playwright-mcp
