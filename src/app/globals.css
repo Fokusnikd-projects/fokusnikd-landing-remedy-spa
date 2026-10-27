@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-accent: #2e4a3b;
+  --color-bg: #f7f3ec;
+  --color-border: #e0d6c6;
+  --color-border-strong: #8a7f6e;
+  --color-gold: #b08d57;
+  --color-gold-on-accent: #d4b483;
+  --color-gold-text: #7a5e33;
+  --color-on-accent: #f7f3ec;
+  --color-placeholder: #e7dfd2;
+  --color-placeholder-text: #8a7f6e;
+  --color-state-error: #b3261e;
+  --color-state-focus: #2e4a3b;
+  --color-state-booked-bg: #ece7df;
+  --color-state-booked-text: #6b6358;
+  --color-text: #1e2621;
+  --color-text-muted: #5c665f;
+  color-scheme: light;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-be-vietnam), sans-serif;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-state-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
