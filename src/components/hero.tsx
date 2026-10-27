@@ -1,32 +1,26 @@
 import { IconCalendar, IconChat, IconPhone, IconPin, IconStar } from "@/components/icons";
+import { MessengerLink } from "@/components/messenger-link";
 import { OpenNowChip } from "@/components/open-now";
-import { Container, IconLink, Overline, PhotoSlot, PrimaryLink, SecondaryLink } from "@/components/ui";
+import { Container, IconLink, Overline, PhotoSlot, PrimaryLink } from "@/components/ui";
 import { copy } from "@/lib/copy";
-import { MAPS_URL, messengerUrl, TEL_URL, type Locale } from "@/lib/facts";
+import { MAPS_URL, TEL_URL, type Locale } from "@/lib/facts";
 
 export function Hero({ locale }: { locale: Locale }) {
   const t = copy[locale];
-  const messenger = messengerUrl(locale);
   return (
     <section className="pb-8 pt-4 lg:py-16">
       <Container>
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:gap-16">
-          <PhotoSlot
-            label={t.photoHero}
-            priority
-            className="h-[160px] w-full lg:order-2 lg:h-[460px] lg:flex-1"
-          />
+          <PhotoSlot label={t.photoHero} className="h-[160px] w-full lg:order-2 lg:h-[460px] lg:flex-1" />
           <div className="flex flex-col gap-3 lg:order-1 lg:flex-1">
             <Overline locale={locale}>{t.heroOverline}</Overline>
             <h1 className="sr-only font-display text-balance text-[64px] font-semibold leading-[72px] lg:not-sr-only">
               Remedy Spa
             </h1>
-            <p className="rounded-sm border border-dashed border-spa-gold px-2 py-1 font-display text-balance text-[22px] italic leading-[30px] text-spa-text lg:text-[28px] lg:leading-9">
+            <p className="font-display text-balance text-[22px] font-medium leading-[30px] text-spa-text lg:text-[28px] lg:leading-9">
               {t.headline}
             </p>
-            <p className="hidden rounded-sm border border-dashed border-spa-gold px-2 py-1 text-[18px] leading-7 text-spa-text lg:block">
-              {t.subheadline}
-            </p>
+            <p className="hidden text-[18px] leading-7 text-spa-text lg:block">{t.subheadline}</p>
             <div className="flex flex-wrap items-center gap-2">
               <a
                 href={MAPS_URL}
@@ -54,10 +48,10 @@ export function Hero({ locale }: { locale: Locale }) {
                 {t.bookOnline}
               </PrimaryLink>
               <div className="flex gap-2">
-                <SecondaryLink href={messenger} external className="min-w-0 flex-1 lg:flex-none">
+                <MessengerLink className="inline-flex h-[52px] min-w-0 flex-1 items-center justify-center gap-2 rounded-full border-[1.5px] border-spa-accent bg-spa-surface px-6 text-[15px] font-semibold leading-5 text-spa-accent lg:flex-none">
                   <IconChat size={20} />
                   {t.heroMessenger}
-                </SecondaryLink>
+                </MessengerLink>
                 <IconLink href={TEL_URL} label={t.callLabel}>
                   <IconPhone size={20} />
                 </IconLink>

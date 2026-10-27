@@ -2,7 +2,7 @@ import Link from "next/link";
 import { copy } from "@/lib/copy";
 import { PHONE_DISPLAY, SPA_NAME, TEL_URL, type Locale } from "@/lib/facts";
 
-export function Footer({ locale }: { locale: Locale }) {
+export function Footer({ locale, showNotes = false }: { locale: Locale; showNotes?: boolean }) {
   const t = copy[locale];
   return (
     <footer className="bg-spa-accent px-6 pb-[104px] pt-12 text-spa-cream lg:pb-12">
@@ -27,7 +27,10 @@ export function Footer({ locale }: { locale: Locale }) {
           </p>
         </div>
         <div className="h-px w-full bg-[rgba(247,243,236,0.2)]" />
-        <p className="text-sm leading-5 text-spa-cream/80">{t.copyright}</p>
+        <p className="text-sm leading-5 text-spa-cream/80">
+          {t.copyright}
+          {showNotes ? (locale === "vi" ? " · Bản demo — chưa xuất bản" : " · Demo mockup — not published") : null}
+        </p>
       </div>
     </footer>
   );

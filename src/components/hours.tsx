@@ -1,7 +1,8 @@
 import { IconClock, IconPin } from "@/components/icons";
+import { MapFacade } from "@/components/map-facade";
 import { Container, Overline, SectionHeading } from "@/components/ui";
 import { copy } from "@/lib/copy";
-import { MAPS_EMBED_URL, MAPS_URL, type Locale } from "@/lib/facts";
+import { MAPS_URL, type Locale } from "@/lib/facts";
 
 export function Hours({ locale }: { locale: Locale }) {
   const t = copy[locale];
@@ -35,14 +36,8 @@ export function Hours({ locale }: { locale: Locale }) {
               {t.openMaps}
             </a>
           </div>
-          <div className="min-h-[240px] flex-1 overflow-hidden rounded-lg border border-dashed border-spa-placeholder-text bg-spa-placeholder lg:min-h-[320px]">
-            <iframe
-              title={t.mapTitle}
-              src={MAPS_EMBED_URL}
-              className="h-full min-h-[240px] w-full border-0 lg:min-h-[320px]"
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
+          <div className="min-h-[240px] flex-1 overflow-hidden rounded-lg border border-spa-border bg-spa-placeholder lg:min-h-[320px]">
+            <MapFacade title={t.mapTitle} showLabel={t.showMap} />
           </div>
         </div>
       </Container>

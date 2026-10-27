@@ -1,5 +1,5 @@
 import { IconStar } from "@/components/icons";
-import { Container, Overline, SectionHeading, TextLink } from "@/components/ui";
+import { Container, SectionHeading, TextLink } from "@/components/ui";
 import { copy } from "@/lib/copy";
 import { MAPS_URL, type Locale } from "@/lib/facts";
 
@@ -18,19 +18,7 @@ export function Reviews({ locale }: { locale: Locale }) {
           <IconStar size={16} className="text-spa-gold" />
           {t.rating}
         </a>
-        <ul className="grid gap-4 lg:grid-cols-3 lg:gap-6">
-          {[0, 1, 2].map((index) => (
-            <li key={index} className="rounded-md border border-spa-border bg-spa-surface p-4">
-              <Overline locale={locale}>{t.reviewKicker}</Overline>
-              <p className="mt-3 flex items-center gap-2 text-[15px] font-semibold leading-5 text-spa-gold-text">
-                <IconStar size={16} className="text-spa-gold" />
-                {t.reviewRating}
-              </p>
-              <p className="mt-2 text-base leading-6 text-spa-text">{t.reviewText}</p>
-              <p className="mt-3 text-[15px] leading-[22px] text-spa-muted">{t.reviewMeta}</p>
-            </li>
-          ))}
-        </ul>
+        <p className="max-w-xl text-base leading-6 text-spa-text">{t.reviewsLead}</p>
         <TextLink href={MAPS_URL} external>
           {t.seeAllReviews}
         </TextLink>

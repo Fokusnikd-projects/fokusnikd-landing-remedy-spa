@@ -3,10 +3,12 @@ import { Be_Vietnam_Pro, Playfair_Display } from "next/font/google";
 import { headers } from "next/headers";
 import "./globals.css";
 
+// One Playfair weight. latin + vietnamese: /vi headings need the diacritics, and Next
+// preloads every next/font call in this file, so a second family would download twice.
+// Be Vietnam Pro is 400 and 600, with vietnamese, because the address uses diacritics in English too.
 const playfair = Playfair_Display({
   subsets: ["latin", "vietnamese"],
-  weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
+  weight: "600",
   variable: "--font-playfair",
   display: "swap",
 });

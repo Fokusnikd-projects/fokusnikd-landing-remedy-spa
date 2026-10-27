@@ -30,8 +30,11 @@ export function Header({ locale }: { locale: Locale }) {
     <header id="top" className="sticky top-0 z-40 border-b border-spa-border bg-spa-bg">
       <div className="mx-auto flex h-[60px] w-full max-w-page items-center justify-between px-6 min-[1248px]:px-0">
         <a href="#top" className="flex items-center gap-3">
-          {/* TODO(placeholder): logo artwork is not available. */}
-          <span className="flex h-9 w-9 items-center justify-center rounded-sm border border-dashed border-spa-gold bg-spa-placeholder text-[10px] leading-none text-spa-placeholder-text">
+          {/* TODO(placeholder): logo artwork is not available. Monogram stands in. */}
+          <span
+            aria-hidden
+            className="flex h-9 w-9 items-center justify-center rounded-sm bg-spa-accent font-display text-[18px] leading-none text-spa-cream"
+          >
             {t.logo}
           </span>
           <span className="font-display text-[20px] font-medium leading-7 text-spa-text">{SPA_NAME}</span>

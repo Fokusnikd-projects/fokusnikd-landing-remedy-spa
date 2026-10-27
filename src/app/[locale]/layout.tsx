@@ -40,6 +40,11 @@ export async function generateMetadata({
       alternateLocale: locale === "vi" ? ["en_US"] : ["vi_VN"],
       type: "website",
     },
+    twitter: {
+      card: "summary_large_image",
+      title: t.metaTitle,
+      description: t.metaDescription,
+    },
   };
 }
 

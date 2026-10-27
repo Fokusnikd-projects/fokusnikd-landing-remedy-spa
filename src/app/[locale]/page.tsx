@@ -10,6 +10,7 @@ import { Hours } from "@/components/hours";
 import { PhaseGate } from "@/components/phase-gate";
 import { Reviews } from "@/components/reviews";
 import { Services } from "@/components/services";
+import { Toast } from "@/components/toast";
 import type { Locale } from "@/lib/facts";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +24,11 @@ export default async function LocalePage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ demo?: string | string[]; slots?: string | string[] }>;
+  searchParams: Promise<{
+    demo?: string | string[];
+    slots?: string | string[];
+    notes?: string | string[];
+  }>;
 }) {
   const { locale } = await params;
   if (locale !== "en" && locale !== "vi") notFound();
@@ -31,9 +36,17 @@ export default async function LocalePage({
   const demo = first(query.demo);
   const initialPhase: Phase = demo === "confirmed" ? "confirmed" : demo === "sent" ? "sent" : "form";
   const safeLocale = locale as Locale;
+  const showNotes = first(query.notes) === "1";
 
   return (
-    <BookingProvider locale={safeLocale} initialPhase={initialPhase} forceSlotError={first(query.slots) === "error"}>
+    <BookingProvider
+      locale={safeLocale}
+      initialPhase={initialPhase}
+      forceSlotError={first(query.slots) === "error"}
+      prefill={demo === "prefill"}
+      forceTaken={demo === "taken"}
+      showNotes={showNotes}
+    >
       <Header locale={safeLocale} />
       <PhaseGate>
         <main>
@@ -42,11 +55,12 @@ export default async function LocalePage({
           <Booking />
           <Reviews locale={safeLocale} />
           <Hours locale={safeLocale} />
-          <Contact locale={safeLocale} />
+          <Contact locale={safeLocale} showNotes={showNotes} />
         </main>
-        <Footer locale={safeLocale} />
+        <Footer locale={safeLocale} showNotes={showNotes} />
         <BottomBar />
       </PhaseGate>
+      <Toast />
     </BookingProvider>
   );
 }

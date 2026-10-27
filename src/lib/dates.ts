@@ -1,7 +1,6 @@
 import {
   ASSUMED_DURATION_MIN,
   DEMO_BOOKED_TIMES,
-  DEMO_CALENDAR_ANCHOR,
   DEMO_FULL_DATES,
   DEMO_SELECTED_DATE,
   DEMO_SELECTED_TIME,
@@ -71,30 +70,19 @@ export function splitIso(iso: string): { year: number; month: number; day: numbe
 }
 
 export type Clock = {
-  /** Calendar “today” used for the date strip and the Today label. */
+  /** Vietnam calendar date (Asia/Ho_Chi_Minh). */
   todayIso: string;
-  /** Real Vietnam date, used to hide slots that have already passed. */
+  /** Same as todayIso. Kept so slot hiding reads the real clock explicitly. */
   realIso: string;
   realMinutes: number;
-  demoCalendar: boolean;
 };
 
 export function getClock(now = new Date()): Clock {
   const real = vietnamParts(now);
-  const realMinutes = real.hour * 60 + real.minute;
-  if (real.iso < DEMO_CALENDAR_ANCHOR) {
-    return {
-      todayIso: DEMO_CALENDAR_ANCHOR,
-      realIso: real.iso,
-      realMinutes,
-      demoCalendar: true,
-    };
-  }
   return {
     todayIso: real.iso,
     realIso: real.iso,
-    realMinutes,
-    demoCalendar: false,
+    realMinutes: real.hour * 60 + real.minute,
   };
 }
 
@@ -189,14 +177,16 @@ export function nextFreeDate(fromIso: string, clock: Clock): { iso: string; time
   return null;
 }
 
-export function initialSelection(clock: Clock): { date: string; time: string | null } {
-  const window = bookingDates(clock.todayIso);
-  const preferred = window.includes(DEMO_SELECTED_DATE) ? DEMO_SELECTED_DATE : window[0];
-  const date = isFullyBooked(preferred) ? (window.find((iso) => !isFullyBooked(iso)) ?? preferred) : preferred;
+export function initialSelection(clock: Clock, prefill: boolean): { date: string; time: string | null } {
+  const days = bookingDates(clock.todayIso);
+  const firstOpen = days.find((iso) => iso >= clock.realIso && !isFullyBooked(iso)) ?? days[0];
+  if (!prefill) return { date: firstOpen, time: null };
+  const preferred = days.includes(DEMO_SELECTED_DATE) ? DEMO_SELECTED_DATE : firstOpen;
+  const date = isFullyBooked(preferred) ? firstOpen : preferred;
   if (isFullyBooked(date)) return { date, time: null };
   const slots = slotsForDate(date, clock);
   const preferredTime = slots.find((slot) => slot.label === DEMO_SELECTED_TIME && !slot.booked);
-  return { date, time: preferredTime?.label ?? firstFreeTime(date, clock) };
+  return { date, time: preferredTime?.label ?? null };
 }
 
 export function monthKey(iso: string): string {
@@ -245,30 +235,29 @@ export function formatMonthTitle(key: string, locale: Locale): string {
   return `${new Intl.DateTimeFormat("en-GB", { month: "long" }).format(new Date(Date.UTC(year, month - 1, 1)))} ${year}`;
 }
 
-export function formatStripCaption(start: string, end: string, today: string, locale: Locale): string {
+export function formatStripCaption(start: string, end: string, locale: Locale): string {
   const s = splitIso(start);
   const e = splitIso(end);
-  const t = splitIso(today);
   if (locale === "vi") {
-    return `${s.day}–${e.day}/${e.month}/${e.year} (demo: hôm nay = ${t.day}/${t.month})`;
+    return `${s.day}/${s.month} – ${e.day}/${e.month}/${e.year}`;
   }
   const sameMonth = s.month === e.month && s.year === e.year;
   const startLabel = sameMonth
     ? `${enWeekday(start)} ${s.day}`
     : `${enWeekday(start)} ${s.day} ${EN_MON[s.month - 1]}`;
-  return `${startLabel} – ${enWeekday(end)} ${e.day} ${EN_MON[e.month - 1]} ${e.year} (demo: today = ${enWeekday(today)} ${t.day})`;
+  return `${startLabel} – ${enWeekday(end)} ${e.day} ${EN_MON[e.month - 1]} ${e.year}`;
 }
 
 export function formatSummaryDate(iso: string, locale: Locale): string {
   const { day, month, year } = splitIso(iso);
-  if (locale === "vi") return `${viWeekday(iso)}, ${day}/${month}/${year} (demo)`;
-  return `${enWeekday(iso)}, ${day} ${EN_MON[month - 1]} ${year} (demo)`;
+  if (locale === "vi") return `${viWeekday(iso)}, ${day}/${month}/${year}`;
+  return `${enWeekday(iso)}, ${day} ${EN_MON[month - 1]} ${year}`;
 }
 
 export function formatDesktopToday(today: string, locale: Locale): string {
   const { day, month } = splitIso(today);
-  if (locale === "vi") return `Hôm nay: ${viWeekday(today)}, ${day}/${month} (demo)`;
-  return `Today: ${enWeekday(today)} ${day} ${EN_MON[month - 1]} (demo)`;
+  if (locale === "vi") return `Hôm nay: ${viWeekday(today)}, ${day}/${month}`;
+  return `Today: ${enWeekday(today)} ${day} ${EN_MON[month - 1]}`;
 }
 
 export function formatShortDay(iso: string, locale: Locale): string {

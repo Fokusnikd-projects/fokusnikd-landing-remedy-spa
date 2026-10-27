@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useLayoutEffect, useRef, type ReactNode } from "react";
 import { IconAlert, IconCheck, IconChevronDown, IconChevronLeft, IconChevronRight, IconClock } from "@/components/icons";
 import { useBooking } from "@/components/booking-context";
+import { MessengerLink } from "@/components/messenger-link";
 import { Container, DemoNote, SectionHeading } from "@/components/ui";
 import { channelLabel, channelOrder } from "@/lib/copy";
 import { DIAL_OPTIONS } from "@/lib/dial";
@@ -23,16 +24,16 @@ import {
   weekdayHeaders,
   type SlotGroupId,
 } from "@/lib/dates";
-import { messengerUrl, SERVICES, type Channel } from "@/lib/facts";
+import { SERVICES, type Channel } from "@/lib/facts";
 import { cx } from "@/lib/cx";
 
 export function Booking() {
-  const { locale, t } = useBooking();
+  const { locale, t, showNotes } = useBooking();
   return (
     <section id="booking" className="scroll-mt-24 bg-spa-surface py-12 lg:py-16">
       <Container className="flex flex-col gap-4 lg:gap-6">
         <SectionHeading locale={locale} overline={t.bookingOverline} title={t.bookingTitle} />
-        <DemoNote>{t.demoBanner}</DemoNote>
+        {showNotes ? <DemoNote>{t.demoBanner}</DemoNote> : null}
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
           <div className="flex min-w-0 flex-1 flex-col gap-4 lg:gap-6">
             <ServiceStep />
@@ -64,7 +65,7 @@ function ServiceStep() {
   return (
     <Card title={t.stepService}>
       <div role="radiogroup" aria-label={t.stepService} className="flex flex-wrap gap-2">
-        {SERVICES.map((service) => {
+        {SERVICES.filter((service) => service.real).map((service) => {
           const selected = service.id === serviceId;
           return (
             <button
@@ -99,10 +100,17 @@ function DateStep() {
   const dates = bookingDates(clock.todayIso);
   const scroller = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const selected = scroller.current?.querySelector<HTMLElement>("[data-selected='true']");
-    selected?.scrollIntoView({ inline: "center", block: "nearest" });
-  }, []);
+  // Scroll the strip only. scrollIntoView would move the window to this step on load.
+  useLayoutEffect(() => {
+    const el = scroller.current;
+    if (!el) return;
+    const selected = el.querySelector<HTMLElement>("[data-selected='true']");
+    if (!selected || selected.offsetLeft + selected.offsetWidth <= el.clientWidth) {
+      el.scrollLeft = 0;
+      return;
+    }
+    el.scrollLeft = Math.max(0, selected.offsetLeft - 8);
+  }, [date]);
 
   const scrollStrip = (direction: number) => {
     scroller.current?.scrollBy({ left: direction * 220, behavior: "smooth" });
@@ -151,18 +159,23 @@ function DateStep() {
       </div>
 
       <div className="lg:hidden">
-        <div ref={scroller} className="flex gap-2 overflow-x-auto pb-1" role="radiogroup" aria-label={t.stepDate}>
+        <div
+          ref={scroller}
+          className="flex gap-2 overflow-x-auto pb-1 [overflow-anchor:none]"
+          role="radiogroup"
+          aria-label={t.stepDate}
+        >
           {dates.map((iso) => (
             <DateCell key={iso} iso={iso} selected={iso === date} onSelect={setDate} showWeekday />
           ))}
         </div>
         <p className="mt-3 text-[13px] leading-[18px] text-spa-muted">
-          {formatStripCaption(dates[0], dates[dates.length - 1], clock.todayIso, locale)}
+          {formatStripCaption(dates[0], dates[dates.length - 1], locale)}
         </p>
       </div>
 
       <div className="hidden lg:block">
-        <div className="grid grid-cols-7 gap-1 text-center">
+        <div className="grid grid-cols-7 gap-2 text-center">
           {weekdayHeaders(locale).map((label) => (
             <p
               key={label}
@@ -175,7 +188,7 @@ function DateStep() {
             </p>
           ))}
         </div>
-        <div className="mt-1 grid grid-cols-7 gap-1" role="radiogroup" aria-label={t.stepDate}>
+        <div className="mt-1 grid grid-cols-7 gap-2" role="radiogroup" aria-label={t.stepDate}>
           {monthGrid(month).map((iso, index) =>
             iso ? (
               <DateCell key={iso} iso={iso} selected={iso === date} onSelect={setDate} showWeekday={false} />
@@ -213,7 +226,7 @@ function DateCell({
         aria-disabled="true"
         className={cx(
           "inline-flex flex-col items-center justify-center rounded-sm px-1 py-2 text-spa-muted",
-          showWeekday ? "h-16 min-w-[52px]" : "h-11 w-full",
+          showWeekday ? "h-16 min-w-[76px] shrink-0" : "h-11 min-w-11 w-full",
         )}
       >
         {showWeekday ? <span className="text-[12px] font-semibold leading-4">{label}</span> : null}
@@ -231,7 +244,7 @@ function DateCell({
       onClick={() => onSelect(iso)}
       className={cx(
         "inline-flex flex-col items-center justify-center rounded-sm border px-1 py-2 font-semibold",
-        showWeekday ? "h-16 min-w-[52px] shrink-0" : "h-11 w-full",
+        showWeekday ? "h-16 min-w-[76px] shrink-0 whitespace-nowrap" : "h-11 min-w-11 w-full",
         selected
           ? "border-spa-accent bg-spa-accent text-spa-cream"
           : booked
@@ -255,9 +268,13 @@ function DateCell({
 }
 
 function TimeStep() {
-  const { locale, t, clock, date, setDate, time, setTime, slotsStatus } = useBooking();
+  const { locale, t, clock, date, setDate, time, setTime, slotsStatus, showNotes, takenNotice, racedKeys, retrySlots } =
+    useBooking();
   const full = isFullyBooked(date);
-  const slots = slotsForDate(date, clock);
+  const slots = slotsForDate(date, clock).map((slot) => ({
+    ...slot,
+    booked: slot.booked || racedKeys.includes(`${date}|${slot.label}`),
+  }));
   const groups: SlotGroupId[] = ["morning", "afternoon", "evening"];
   const groupLabel: Record<SlotGroupId, string> = {
     morning: t.groupMorning,
@@ -267,7 +284,7 @@ function TimeStep() {
   const next = full ? nextFreeDate(date, clock) : null;
 
   return (
-    <div className="min-w-0 flex-1">
+    <div id="booking-time" className="min-w-0 flex-1 scroll-mt-24">
       <Card title={t.stepTime}>
         <p className="text-[15px] leading-[22px] text-spa-muted">{t.timeZoneNote}</p>
         <div className="flex flex-wrap gap-4 text-[13px] leading-[18px] text-spa-text">
@@ -277,9 +294,9 @@ function TimeStep() {
         </div>
         {slotsStatus === "loading" ? (
           <div role="status">
-            <div className="flex flex-wrap gap-2" aria-hidden>
+            <div className="grid grid-cols-4 gap-2" aria-hidden>
               {Array.from({ length: 8 }).map((_, index) => (
-                <span key={index} className="h-11 w-[72px] animate-pulse rounded-sm bg-spa-skeleton" />
+                <span key={index} className="h-11 animate-pulse rounded-sm bg-spa-skeleton" />
               ))}
             </div>
             <p className="mt-2 text-[13px] leading-[18px] text-spa-muted">{t.loadingTimes}</p>
@@ -291,14 +308,18 @@ function TimeStep() {
               <IconAlert className="shrink-0" />
               {t.slotsError}
             </p>
-            <a
-              href={messengerUrl(locale)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex h-[52px] items-center justify-center rounded-full border-[1.5px] border-spa-accent px-6 text-[15px] font-semibold text-spa-accent"
-            >
-              {t.slotsErrorAction}
-            </a>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={retrySlots}
+                className="inline-flex h-[52px] min-w-[8rem] flex-1 items-center justify-center rounded-full border-[1.5px] border-spa-accent px-4 text-[15px] font-semibold text-spa-accent"
+              >
+                {t.tryAgain}
+              </button>
+              <MessengerLink className="inline-flex h-[52px] min-w-[8rem] flex-1 items-center justify-center rounded-full border-[1.5px] border-spa-accent px-4 text-center text-[15px] font-semibold text-spa-accent">
+                {t.slotsErrorAction}
+              </MessengerLink>
+            </div>
           </div>
         ) : null}
         {slotsStatus === "ready" && full ? (
@@ -319,15 +340,22 @@ function TimeStep() {
             ) : null}
           </div>
         ) : null}
+        {takenNotice ? (
+          <p role="alert" className="flex items-start gap-2 text-[15px] leading-[22px] text-spa-error">
+            <IconAlert className="mt-0.5 shrink-0" />
+            {t.slotTaken}
+          </p>
+        ) : null}
         {slotsStatus === "ready" && !full ? (
           <div className="flex flex-col gap-4">
             {groups.map((group) => {
               const items = slots.filter((slot) => slot.group === group);
+              // Groups already past on the real Vietnam today have no slots left, so they collapse.
               if (items.length === 0) return null;
               return (
                 <div key={group} className="flex flex-col gap-2">
                   <p className="text-[15px] font-semibold leading-5 text-spa-text">{groupLabel[group]}</p>
-                  <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={groupLabel[group]}>
+                  <div className="grid grid-cols-4 gap-2" role="radiogroup" aria-label={groupLabel[group]}>
                     {items.map((slot) => (
                       <SlotButton
                         key={slot.label}
@@ -343,9 +371,11 @@ function TimeStep() {
             })}
           </div>
         ) : null}
-        <p className="rounded-sm border border-dashed border-spa-gold bg-spa-sand px-3 py-2 text-[13px] leading-[18px] text-spa-muted">
-          {t.slotNote}
-        </p>
+        {showNotes ? (
+          <p className="rounded-sm border border-dashed border-spa-gold bg-spa-sand px-3 py-2 text-[13px] leading-[18px] text-spa-muted">
+            {t.slotNote}
+          </p>
+        ) : null}
       </Card>
     </div>
   );
@@ -390,7 +420,7 @@ function SlotButton({
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") event.preventDefault();
         }}
-        className="inline-flex h-11 min-w-[72px] items-center justify-center rounded-sm border border-spa-booked bg-spa-booked px-3 text-[15px] font-semibold leading-5 text-spa-booked-text line-through"
+        className="inline-flex h-11 w-full items-center justify-center rounded-sm border border-spa-booked bg-spa-booked px-1 text-[14px] font-semibold leading-5 text-spa-booked-text line-through"
       >
         {label}
       </button>
@@ -404,7 +434,7 @@ function SlotButton({
       aria-label={`${label}, ${selected ? t.selected : t.available}`}
       onClick={onSelect}
       className={cx(
-        "inline-flex h-11 min-w-[72px] items-center justify-center rounded-sm border px-3 text-[15px] font-semibold leading-5",
+        "inline-flex h-11 w-full items-center justify-center rounded-sm border px-1 text-[14px] font-semibold leading-5",
         selected
           ? "border-spa-accent bg-spa-accent text-spa-cream"
           : "border-spa-border-strong bg-spa-surface text-spa-text",
@@ -434,13 +464,13 @@ function SummaryStep() {
     setChannel,
     errors,
     submit,
+    showNotes,
   } = useBooking();
-  const messenger = messengerUrl(locale);
 
   return (
     <form
       id="booking-details"
-      className="scroll-mb-32 flex flex-col gap-4 rounded-md border border-spa-border bg-spa-bg p-4 lg:scroll-mb-0"
+      className="scroll-mb-32 scroll-mt-[76px] flex flex-col gap-4 rounded-md border border-spa-border bg-spa-bg p-4 lg:scroll-mb-0"
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
@@ -456,7 +486,7 @@ function SummaryStep() {
         <SummaryRow label={t.labelPrice} value={t.price} />
       </dl>
 
-      <label className="flex flex-col gap-2 text-[15px] font-semibold leading-5" htmlFor="guest-name">
+      <label data-field="name" className="flex flex-col gap-2 text-[15px] font-semibold leading-5" htmlFor="guest-name">
         {t.nameLabel}
         <input
           id="guest-name"
@@ -467,7 +497,10 @@ function SummaryStep() {
           aria-invalid={errors.name ? true : undefined}
           aria-describedby={errors.name ? "guest-name-error" : undefined}
           onChange={(event) => setName(event.target.value)}
-          className="h-[52px] rounded-sm border border-spa-border-strong bg-spa-surface px-4 text-base font-normal text-spa-text placeholder:text-spa-placeholder-text"
+          className={cx(
+            "h-[52px] rounded-sm bg-spa-surface px-4 text-base font-normal text-spa-text placeholder:text-spa-placeholder-text",
+            errors.name ? "border-2 border-spa-error" : "border border-spa-border-strong",
+          )}
         />
       </label>
       {errors.name ? (
@@ -477,7 +510,7 @@ function SummaryStep() {
         </p>
       ) : null}
 
-      <div className="flex flex-col gap-2">
+      <div data-field="phone" className="flex flex-col gap-2">
         <label className="text-[15px] font-semibold leading-5" htmlFor="guest-phone">
           {t.phoneLabel}
         </label>
@@ -529,7 +562,11 @@ function SummaryStep() {
 
       <fieldset className="flex flex-col gap-2">
         <legend className="text-[15px] font-semibold leading-5">{t.confirmVia}</legend>
-        <div role="radiogroup" aria-label={t.confirmVia} className="flex h-11 rounded-full border border-spa-border-strong bg-spa-surface p-1">
+        <div
+          role="radiogroup"
+          aria-label={t.confirmVia}
+          className="flex h-[54px] items-stretch rounded-full border border-spa-border-strong bg-spa-surface p-[5px]"
+        >
           {channelOrder(locale).map((item) => {
             const selected = channel === item;
             return (
@@ -540,7 +577,7 @@ function SummaryStep() {
                 aria-checked={selected}
                 onClick={() => setChannel(item as Channel)}
                 className={cx(
-                  "flex-1 rounded-full text-[15px] font-semibold",
+                  "h-11 flex-1 rounded-full text-[15px] font-semibold",
                   selected ? "bg-spa-accent text-spa-cream" : "text-spa-text",
                 )}
               >
@@ -549,7 +586,7 @@ function SummaryStep() {
             );
           })}
         </div>
-        <p className="text-[13px] leading-[18px] text-spa-muted">{t.channelNote}</p>
+        {showNotes ? <p className="text-[13px] leading-[18px] text-spa-muted">{t.channelNote}</p> : null}
       </fieldset>
 
       {/* TODO(copy): optional note is required by the brief and is not in the Figma copy table. */}
@@ -584,15 +621,10 @@ function SummaryStep() {
           t.chooseTime
         )}
       </button>
-      <a
-        href={messenger}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex h-[52px] items-center justify-center gap-2 rounded-full border-[1.5px] border-spa-accent text-[15px] font-semibold text-spa-accent"
-      >
+      <MessengerLink className="inline-flex h-[52px] items-center justify-center gap-2 rounded-full border-[1.5px] border-spa-accent text-[15px] font-semibold text-spa-accent">
         {t.orMessage}
-      </a>
-      <p className="text-center text-[13px] leading-[18px] text-spa-muted">{t.demoFooter}</p>
+      </MessengerLink>
+      {showNotes ? <p className="text-center text-[13px] leading-[18px] text-spa-muted">{t.demoFooter}</p> : null}
     </form>
   );
 }

@@ -76,11 +76,10 @@ export const DEMO_BOOKED_TIMES = new Set([
 ]);
 
 /**
- * The v3 frames are drawn with “today” = Monday 2 Nov 2026.
- * Before that date the sales demo keeps that calendar so it matches the mockup.
- * From 2 Nov 2026 onward the window follows the real Vietnam date.
+ * TODO(demo): only `?demo=prefill` selects Wed 4 Nov 2026 at 19:00, when that
+ * day is still inside the 14-day window. The calendar itself uses the real
+ * Vietnam date.
  */
-export const DEMO_CALENDAR_ANCHOR = "2026-11-02";
 export const DEMO_SELECTED_DATE = "2026-11-04";
 export const DEMO_SELECTED_TIME = "19:00";
 

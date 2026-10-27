@@ -62,6 +62,15 @@ export type Copy = {
   channelZalo: string;
   channelCall: string;
   channelNote: string;
+  confirmOn: (channel: Channel, number: string) => string;
+  wrongNumber: string;
+  copied: string;
+  copyFailed: string;
+  tryAgain: string;
+  slotTaken: string;
+  showMap: string;
+  reviewsLead: string;
+  previewNotSent: string;
   sendRequest: string;
   chooseTime: string;
   orMessage: string;
@@ -109,7 +118,6 @@ export type Copy = {
   requestSentTitle: string;
   waiting: string;
   requestNumber: string;
-  confirmChannel: string;
   messageUs: string;
   getDirections: string;
   needChange: string;
@@ -129,15 +137,17 @@ export type Copy = {
 const servicesEn: Record<ServiceId, string> = {
   body: "Body massage",
   therapeutic: "Therapeutic massage / Eastern medicine",
-  "placeholder-3": "[service]",
-  "placeholder-4": "[service]",
+  // TODO(placeholder): mockup had two extra cards. They are not real services and are not shown.
+  "placeholder-3": "Ask us about treatments",
+  "placeholder-4": "Ask us about treatments",
 };
 
 const servicesVi: Record<ServiceId, string> = {
   body: "Massage toàn thân",
   therapeutic: "Massage trị liệu / Đông y",
-  "placeholder-3": "[dịch vụ]",
-  "placeholder-4": "[dịch vụ]",
+  // TODO(placeholder): mockup had two extra cards. They are not real services and are not shown.
+  "placeholder-3": "Hỏi chúng tôi về liệu trình",
+  "placeholder-4": "Hỏi chúng tôi về liệu trình",
 };
 
 export const copy: Record<Locale, Copy> = {
@@ -145,7 +155,7 @@ export const copy: Record<Locale, Copy> = {
     metaTitle: "Remedy Spa · Massage & Eastern medicine · District 1",
     metaDescription:
       "Body massage and therapeutic massage at 35 Hai Bà Trưng, District 1, Ho Chi Minh City. Open daily 09:00–23:45. 4.7 · 201 Google reviews.",
-    logo: "[logo]",
+    logo: "R",
     navServices: "Services",
     navBooking: "Booking",
     navReviews: "Reviews",
@@ -156,23 +166,24 @@ export const copy: Record<Locale, Copy> = {
     bookOnlineBar: "Book online",
     callLabel: "Call +84 867 135 393",
     heroOverline: "Massage & Eastern medicine · District 1",
-    headline: "[Headline slot — e.g. “Unwind in the heart of District 1”]",
-    subheadline: "[Subheadline slot — one sentence about the spa, to be written with the owner]",
+    // TODO(copy): owner has not written a tagline. This line uses only the real services and district.
+    headline: "Body massage and Eastern medicine in District 1",
+    subheadline: "35 Hai Bà Trưng, Ho Chi Minh City. Open daily 09:00–23:45.",
     rating: "4.7 · 201 Google reviews",
     addressLine: "35 Hai Bà Trưng, District 1 · Directions",
     heroMessenger: "Message on WhatsApp",
     servicesOverline: "Services & prices",
     servicesTitle: "Treatments",
-    servicesNote: "Prices and durations are placeholders — confirm with the spa.",
-    photo: "[photo]",
-    photoHero: "[photo] spa interior / treatment room",
-    photoTreatment: "[photo] treatment",
+    servicesNote: "Ask us for current prices and durations.",
+    photo: "Photo",
+    photoHero: "Photo",
+    photoTreatment: "Photo",
     serviceName: servicesEn,
-    serviceDescription: "[short description]",
-    duration: "[duration] min",
-    price: "[price] VND",
-    priceUsd: "≈ US$ [amount]",
-    serviceMeta: "[duration] min · [price] VND (≈ US$ [amount])",
+    serviceDescription: "Ask us about this treatment.",
+    duration: "Ask us for the duration",
+    price: "Ask us for the current price",
+    priceUsd: null,
+    serviceMeta: "Ask us for the duration and the current price.",
     bookLink: "Book →",
     bookingOverline: "Online booking",
     bookingTitle: "Book your visit",
@@ -205,24 +216,38 @@ export const copy: Record<Locale, Copy> = {
     channelZalo: "Zalo",
     channelCall: "Call",
     channelNote: "[Channels the spa can confirm on — to be agreed with the owner]",
+    confirmOn: (channel, number) =>
+      channel === "call"
+        ? `We’ll confirm by phone at ${number}`
+        : channel === "zalo"
+          ? `We’ll confirm on Zalo to ${number}`
+          : `We’ll confirm on WhatsApp to ${number}`,
+    wrongNumber: "Wrong number? Edit",
+    copied: "Booking details copied",
+    copyFailed: "Couldn’t copy the booking details",
+    tryAgain: "Try again",
+    slotTaken: "That time was just taken. Please choose another.",
+    showMap: "Show map",
+    reviewsLead: "Guest reviews are on Google Maps.",
+    previewNotSent: "This preview did not send a message.",
     sendRequest: "Send booking request",
     chooseTime: "Choose a time to continue",
     orMessage: "or message us on WhatsApp",
     demoFooter: "Demo only: not connected to a real calendar, nothing is sent.",
     noteLabel: "Note (optional)",
     errName: "Enter your name",
-    errPhone: "Enter your number with country code",
+    errPhone: "Enter a phone number",
     loadingTimes: "Loading times…",
     slotsError: "Couldn’t load times. Message us on WhatsApp",
     slotsErrorAction: "Message us on WhatsApp",
-    fullyBooked: (when, next, time) => `Fully booked on ${when} · Next free: ${next}, ${time} (demo)`,
+    fullyBooked: (when, next, time) => `Fully booked on ${when} · Next free: ${next}, ${time}`,
     showNext: (when) => `Show ${when} →`,
     reviewsOverline: "Reviews",
     reviewsTitle: "What guests say",
     reviewKicker: "Review from Google Maps — placeholder",
-    reviewRating: "[rating]",
-    reviewText: "“[review text from Google Maps]”",
-    reviewMeta: "[reviewer name] · [date]",
+    reviewRating: "",
+    reviewText: "",
+    reviewMeta: "",
     seeAllReviews: "See all 201 reviews on Google Maps →",
     hoursOverline: "Hours & location",
     hoursTitle: "Open late, every day",
@@ -235,7 +260,8 @@ export const copy: Record<Locale, Copy> = {
     contactOverline: "Contact",
     contactTitleMobile: "Book in one tap",
     contactTitleDesktop: "Book in one click",
-    contactInvite: "[Short invite line — editable slot]",
+    // TODO(copy): owner has not written an invite. This line does not claim Zalo or WhatsApp are confirmed.
+    contactInvite: "Call or send a message.",
     contactPrimary: "WhatsApp · +84 867 135 393",
     contactSecondary: "Zalo · +84 867 135 393",
     contactCall: "Call +84 867 135 393",
@@ -244,15 +270,14 @@ export const copy: Record<Locale, Copy> = {
     footerAddress: "35 Hai Bà Trưng, District 1, HCMC",
     footerHours: "Open daily 09:00–23:45",
     footerLangs: "English · Tiếng Việt",
-    copyright: "© 2026 Remedy Spa · Demo mockup — not published",
+    copyright: "© 2026 Remedy Spa",
     previousMonth: "Previous month",
     nextMonth: "Next month",
     earlierDates: "Earlier dates",
     laterDates: "Later dates",
     requestSentTitle: "Request sent",
-    waiting: "Waiting for confirmation · usually within [response time]",
-    requestNumber: "Request #[request number]",
-    confirmChannel: "We’ll confirm on WhatsApp to [your number]",
+    waiting: "Waiting for confirmation.",
+    requestNumber: "Request number is not assigned in this preview.",
     messageUs: "Message us on WhatsApp",
     getDirections: "Get directions",
     needChange: "Need to change? Message us",
@@ -261,7 +286,7 @@ export const copy: Record<Locale, Copy> = {
       "⚠ Demo screen — nothing is sent. Request number, response time and the guest’s number are placeholders.",
     confirmedTitle: "Booking confirmed",
     confirmedChip: "Confirmed by the spa",
-    confirmedMessage: "[Confirmation message from the spa — wording to be agreed with the owner]",
+    confirmedMessage: "This screen is a preview. The spa has not confirmed a visit.",
     addToCalendar: "Add to calendar",
     confirmedNote:
       "⚠ How the guest gets to this screen (e.g. a link in the spa’s WhatsApp reply) — to be agreed with the spa.",
@@ -274,7 +299,7 @@ export const copy: Record<Locale, Copy> = {
     metaTitle: "Remedy Spa · Massage & Đông y · Quận 1",
     metaDescription:
       "Massage toàn thân và massage trị liệu tại 35 Hai Bà Trưng, Quận 1, TP. Hồ Chí Minh. Mở cửa hằng ngày 09:00–23:45. 4.7 · 201 đánh giá trên Google.",
-    logo: "[logo]",
+    logo: "R",
     navServices: "Dịch vụ",
     navBooking: "Đặt lịch",
     navReviews: "Đánh giá",
@@ -285,23 +310,24 @@ export const copy: Record<Locale, Copy> = {
     bookOnlineBar: "Đặt lịch",
     callLabel: "Gọi +84 867 135 393",
     heroOverline: "Massage & Đông y · Quận 1",
-    headline: "[Tiêu đề — ví dụ: “Thư giãn giữa lòng Quận 1”]",
-    subheadline: "[Mô tả ngắn — một câu về spa, sẽ viết cùng chủ spa]",
+    // TODO(copy): owner has not written a tagline. This line uses only the real services and district.
+    headline: "Massage toàn thân và Đông y tại Quận 1",
+    subheadline: "35 Hai Bà Trưng, TP. Hồ Chí Minh. Mở cửa hằng ngày 09:00–23:45.",
     rating: "4.7 · 201 đánh giá trên Google",
     addressLine: "35 Hai Bà Trưng, Quận 1 · Chỉ đường",
     heroMessenger: "Nhắn Zalo",
     servicesOverline: "Dịch vụ & bảng giá",
     servicesTitle: "Liệu trình",
-    servicesNote: "Giá và thời lượng là nội dung tạm — cần xác nhận với spa.",
-    photo: "[ảnh]",
-    photoHero: "[ảnh] nội thất spa / phòng trị liệu",
-    photoTreatment: "[ảnh] liệu trình",
+    servicesNote: "Hỏi chúng tôi về giá và thời lượng hiện tại.",
+    photo: "Ảnh",
+    photoHero: "Ảnh",
+    photoTreatment: "Ảnh",
     serviceName: servicesVi,
-    serviceDescription: "[mô tả ngắn]",
-    duration: "[thời lượng] phút",
-    price: "[giá] VND",
+    serviceDescription: "Hỏi chúng tôi về liệu trình này.",
+    duration: "Hỏi chúng tôi về thời lượng",
+    price: "Hỏi chúng tôi về giá hiện tại",
     priceUsd: null,
-    serviceMeta: "[thời lượng] phút · [giá] VND",
+    serviceMeta: "Hỏi chúng tôi về thời lượng và giá hiện tại.",
     bookLink: "Đặt lịch →",
     bookingOverline: "Đặt lịch online",
     bookingTitle: "Đặt lịch hẹn",
@@ -334,6 +360,20 @@ export const copy: Record<Locale, Copy> = {
     channelZalo: "Zalo",
     channelCall: "Gọi",
     channelNote: "[Kênh spa có thể xác nhận — cần thống nhất với chủ spa]",
+    confirmOn: (channel, number) =>
+      channel === "call"
+        ? `Chúng tôi sẽ xác nhận qua điện thoại tại ${number}`
+        : channel === "whatsapp"
+          ? `Chúng tôi sẽ xác nhận qua WhatsApp tới ${number}`
+          : `Chúng tôi sẽ xác nhận qua Zalo tới ${number}`,
+    wrongNumber: "Sai số? Sửa",
+    copied: "Đã sao chép nội dung đặt lịch",
+    copyFailed: "Không sao chép được nội dung đặt lịch",
+    tryAgain: "Thử lại",
+    slotTaken: "Khung giờ này vừa được đặt. Vui lòng chọn giờ khác.",
+    showMap: "Xem bản đồ",
+    reviewsLead: "Đánh giá của khách nằm trên Google Maps.",
+    previewNotSent: "Bản xem trước này không gửi tin nhắn.",
     sendRequest: "Gửi yêu cầu đặt lịch",
     // TODO(copy): disabled-button string is EN-only on the states board.
     chooseTime: "Chọn giờ để tiếp tục",
@@ -341,18 +381,18 @@ export const copy: Record<Locale, Copy> = {
     demoFooter: "Chỉ là demo: chưa kết nối lịch thật, không gửi dữ liệu.",
     noteLabel: "Ghi chú (không bắt buộc)",
     errName: "Nhập họ tên",
-    errPhone: "Nhập số kèm mã quốc gia",
+    errPhone: "Nhập số điện thoại",
     loadingTimes: "Đang tải giờ…",
     slotsError: "Không tải được giờ. Nhắn Zalo cho chúng tôi",
     slotsErrorAction: "Nhắn Zalo cho chúng tôi",
-    fullyBooked: (when, next, time) => `Đã kín vào ${when} · Ngày trống kế: ${next}, ${time} (demo)`,
+    fullyBooked: (when, next, time) => `Đã kín vào ${when} · Ngày trống kế: ${next}, ${time}`,
     showNext: (when) => `Xem ${when} →`,
     reviewsOverline: "Đánh giá",
     reviewsTitle: "Khách hàng nói gì",
     reviewKicker: "Đánh giá từ Google Maps — nội dung tạm",
-    reviewRating: "[số sao]",
-    reviewText: "“[nội dung đánh giá từ Google Maps]”",
-    reviewMeta: "[tên khách] · [ngày]",
+    reviewRating: "",
+    reviewText: "",
+    reviewMeta: "",
     seeAllReviews: "Xem tất cả 201 đánh giá trên Google Maps →",
     hoursOverline: "Giờ mở cửa & địa chỉ",
     hoursTitle: "Mở cửa muộn, mỗi ngày",
@@ -365,7 +405,8 @@ export const copy: Record<Locale, Copy> = {
     contactOverline: "Liên hệ",
     contactTitleMobile: "Đặt lịch chỉ với một chạm",
     contactTitleDesktop: "Đặt lịch chỉ với một cú nhấp",
-    contactInvite: "[Câu mời ngắn — có thể chỉnh sửa]",
+    // TODO(copy): owner has not written an invite. This line does not claim Zalo or WhatsApp are confirmed.
+    contactInvite: "Gọi hoặc nhắn tin.",
     contactPrimary: "Zalo · +84 867 135 393",
     contactSecondary: "WhatsApp · +84 867 135 393",
     contactCall: "Gọi +84 867 135 393",
@@ -374,15 +415,14 @@ export const copy: Record<Locale, Copy> = {
     footerAddress: "35 Hai Bà Trưng, Quận 1, TP.HCM",
     footerHours: "Mở cửa hằng ngày 09:00–23:45",
     footerLangs: "English · Tiếng Việt",
-    copyright: "© 2026 Remedy Spa · Bản demo — chưa xuất bản",
+    copyright: "© 2026 Remedy Spa",
     previousMonth: "Tháng trước",
     nextMonth: "Tháng sau",
     earlierDates: "Ngày trước",
     laterDates: "Ngày sau",
     requestSentTitle: "Đã gửi yêu cầu",
-    waiting: "Đang chờ xác nhận · thường trong [thời gian phản hồi]",
-    requestNumber: "Yêu cầu #[mã yêu cầu]",
-    confirmChannel: "Chúng tôi sẽ xác nhận qua Zalo tới [số của bạn]",
+    waiting: "Đang chờ xác nhận.",
+    requestNumber: "Bản xem trước không cấp mã yêu cầu.",
     messageUs: "Nhắn Zalo cho chúng tôi",
     getDirections: "Chỉ đường",
     needChange: "Cần thay đổi? Nhắn cho chúng tôi",
@@ -391,7 +431,7 @@ export const copy: Record<Locale, Copy> = {
       "⚠ Màn hình demo — không gửi gì. Mã yêu cầu, thời gian phản hồi và số của khách là nội dung tạm.",
     confirmedTitle: "Đã xác nhận lịch hẹn",
     confirmedChip: "Spa đã xác nhận",
-    confirmedMessage: "[Nội dung xác nhận từ spa — cần thống nhất với chủ spa]",
+    confirmedMessage: "Đây là màn hình xem trước. Spa chưa xác nhận lịch hẹn.",
     addToCalendar: "Thêm vào lịch",
     confirmedNote:
       "⚠ Cách khách mở màn hình này (ví dụ link trong tin nhắn Zalo của spa) — cần thống nhất với spa.",

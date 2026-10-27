@@ -2,15 +2,10 @@
 
 import { IconCalendar, IconChat, IconCheck, IconClock, IconPin } from "@/components/icons";
 import { useBooking } from "@/components/booking-context";
+import { MessengerLink } from "@/components/messenger-link";
 import { DemoNote } from "@/components/ui";
 import { formatSummaryDate, icsStamp } from "@/lib/dates";
-import {
-  ADDRESS_STREET,
-  ASSUMED_DURATION_MIN,
-  MAPS_URL,
-  messengerUrl,
-  SPA_NAME,
-} from "@/lib/facts";
+import { ADDRESS_STREET, ASSUMED_DURATION_MIN, MAPS_URL, SPA_NAME } from "@/lib/facts";
 
 function SummaryCard() {
   const { locale, t, serviceId, date, time } = useBooking();
@@ -66,7 +61,10 @@ function downloadIcs(iso: string, time: string, service: string) {
 }
 
 export function RequestSent() {
-  const { locale, t, backToForm } = useBooking();
+  const { locale, t, channel, dial, phone, showNotes, backToForm, editNumber } = useBooking();
+  const number = `${dial} ${phone.trim()}`;
+  const messageChannel = channel === "call" ? (locale === "vi" ? "zalo" : "whatsapp") : channel;
+  const messageLabel = messageChannel === "zalo" ? (locale === "vi" ? t.messageUs : t.channelZalo) : locale === "en" ? t.messageUs : t.channelWhatsapp;
   return (
     <div className="mx-auto flex w-full max-w-[480px] flex-col gap-4 px-6 py-8">
       <span className="flex size-14 items-center justify-center rounded-full bg-spa-sand text-spa-accent">
@@ -77,19 +75,21 @@ export function RequestSent() {
         <IconClock size={16} className="mt-0.5 shrink-0 text-spa-gold-text" />
         {t.waiting}
       </p>
-      <p className="text-base font-semibold leading-6 text-spa-text">{t.requestNumber}</p>
-      <p className="text-base leading-6 text-spa-text">{t.confirmChannel}</p>
+      <p className="text-base leading-6 text-spa-text">{t.previewNotSent}</p>
+      {showNotes ? <p className="text-base font-semibold leading-6 text-spa-text">{t.requestNumber}</p> : null}
+      <p className="text-base leading-6 text-spa-text">{t.confirmOn(channel, number)}</p>
+      <button type="button" onClick={editNumber} className="inline-flex min-h-11 items-center text-left text-[15px] font-semibold text-spa-accent">
+        {t.wrongNumber}
+      </button>
       <SummaryCard />
-      {/* TODO(confirm-with-spa): messenger link. Request number stays a placeholder, so the chat is not prefilled with a fake id. */}
-      <a
-        href={messengerUrl(locale)}
-        target="_blank"
-        rel="noopener noreferrer"
+      {/* TODO(confirm-with-spa): messenger link. No request number is invented, so the chat is not prefilled with one. */}
+      <MessengerLink
+        channel={messageChannel}
         className="inline-flex h-[52px] items-center justify-center gap-2 rounded-full bg-spa-accent px-6 text-[15px] font-semibold text-spa-cream"
       >
         <IconChat size={20} />
-        {t.messageUs}
-      </a>
+        {messageLabel}
+      </MessengerLink>
       <a
         href={MAPS_URL}
         target="_blank"
@@ -99,24 +99,19 @@ export function RequestSent() {
         <IconPin size={20} />
         {t.getDirections}
       </a>
-      <a
-        href={messengerUrl(locale)}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex h-11 items-center text-[15px] font-semibold text-spa-accent"
-      >
+      <MessengerLink className="inline-flex h-11 items-center text-[15px] font-semibold text-spa-accent">
         {t.needChange}
-      </a>
+      </MessengerLink>
       <button type="button" onClick={backToForm} className="inline-flex h-11 items-center text-left text-[15px] font-semibold text-spa-text">
         {t.backHome}
       </button>
-      <DemoNote>{t.requestDemoNote}</DemoNote>
+      {showNotes ? <DemoNote>{t.requestDemoNote}</DemoNote> : null}
     </div>
   );
 }
 
 export function BookingConfirmed() {
-  const { locale, t, serviceId, date, time, backToForm } = useBooking();
+  const { t, serviceId, date, time, showNotes, backToForm } = useBooking();
   return (
     <div className="mx-auto flex w-full max-w-[480px] flex-col gap-4 px-6 py-8">
       <span className="flex size-14 items-center justify-center rounded-full bg-spa-accent text-spa-cream">
@@ -127,9 +122,7 @@ export function BookingConfirmed() {
         <IconCheck size={20} />
         {t.confirmedChip}
       </p>
-      <p className="rounded-sm border border-dashed border-spa-gold px-2 py-1 text-[15px] leading-[22px] text-spa-text">
-        {t.confirmedMessage}
-      </p>
+      <p className="text-[15px] leading-[22px] text-spa-text">{t.confirmedMessage}</p>
       <SummaryCard />
       <a
         href={MAPS_URL}
@@ -148,18 +141,13 @@ export function BookingConfirmed() {
         <IconCalendar size={20} />
         {t.addToCalendar}
       </button>
-      <a
-        href={messengerUrl(locale)}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex h-11 items-center text-[15px] font-semibold text-spa-accent"
-      >
+      <MessengerLink className="inline-flex h-11 items-center text-[15px] font-semibold text-spa-accent">
         {t.needChange}
-      </a>
+      </MessengerLink>
       <button type="button" onClick={backToForm} className="inline-flex h-11 items-center text-left text-[15px] font-semibold text-spa-text">
         {t.backHome}
       </button>
-      <DemoNote>{t.confirmedNote}</DemoNote>
+      {showNotes ? <DemoNote>{t.confirmedNote}</DemoNote> : null}
     </div>
   );
 }

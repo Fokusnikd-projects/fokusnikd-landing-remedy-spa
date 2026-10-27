@@ -1,4 +1,3 @@
-import Image from "next/image";
 import type { ReactNode } from "react";
 import { cx } from "@/lib/cx";
 import type { Locale } from "@/lib/facts";
@@ -54,24 +53,15 @@ export function SectionHeading({
 }
 
 /** TODO(placeholder): neutral block until the spa provides a photo. Not a stock photo. */
-export function PhotoSlot({
-  label,
-  className,
-  priority = false,
-}: {
-  label: string;
-  className?: string;
-  priority?: boolean;
-}) {
+export function PhotoSlot({ label, className }: { label: string; className?: string }) {
   return (
     <div
       className={cx(
-        "relative flex items-center justify-center overflow-hidden rounded-lg border border-dashed border-spa-placeholder-text bg-spa-placeholder",
+        "relative flex items-center justify-center overflow-hidden rounded-lg border border-dashed border-spa-placeholder-text bg-gradient-to-br from-[#E7DFD2] via-[#EFE7DA] to-[#E0D6C6]",
         className,
       )}
     >
-      <Image src="/placeholders/block.svg" alt="" fill className="object-cover" priority={priority} unoptimized />
-      <span className="relative z-[1] px-2 text-center text-[13px] leading-[18px] text-spa-placeholder-text">{label}</span>
+      <span className="px-2 text-center text-[13px] leading-[18px] text-spa-placeholder-text">{label}</span>
     </div>
   );
 }
